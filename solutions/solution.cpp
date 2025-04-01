@@ -21,7 +21,7 @@ public:
                 result[index--] = rightSquare;
                 right--;
             }
-        }
+        }/*head to safe jpne*/
 
         return result;
     }
