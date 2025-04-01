@@ -22,35 +22,35 @@ jobs:
         run: |
           BEFORE_COMMIT="${{ github.event.before }}"
           if [ -z "$BEFORE_COMMIT" ] || ! git cat-file -e "$BEFORE_COMMIT"^{commit}; then
-            BEFORE_COMMIT=$(git rev-list --max-parents=0 HEAD)  # Use first commit if invalid
+            BEFORE_COMMIT=$(git rev-list --max-parents=0 HEAD)
           fi
           CHANGED_FILES=$(git diff --name-only "$BEFORE_COMMIT" "${{ github.sha }}")
 
-          echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
-          echo "Files changed: $CHANGED_FILES"
+          echo "changed_files=$CHANGED_FILES" >> $GITHUB_ENV
+          echo "::set-output name=changed_files::$CHANGED_FILES"
 
       - name: Compile and Run C Program
-        if: contains(env.CHANGED_FILES, '.c')
+        if: contains(steps.file-check.outputs.changed_files, '.c')
         run: |
           gcc solutions/*.c -o solution_c
           echo "Running C Program..."
           ./solution_c < test_cases/input.txt
 
       - name: Compile and Run C++ Program
-        if: contains(env.CHANGED_FILES, '.cpp')
+        if: contains(steps.file-check.outputs.changed_files, '.cpp')
         run: |
           g++ solutions/*.cpp -o solution_cpp
           echo "Running C++ Program..."
           ./solution_cpp < test_cases/input.txt
 
       - name: Run Python Program
-        if: contains(env.CHANGED_FILES, '.py')
+        if: contains(steps.file-check.outputs.changed_files, '.py')
         run: |
           echo "Running Python Program..."
           python3 solutions/*.py < test_cases/input.txt
 
       - name: Compile and Run Java Program
-        if: contains(env.CHANGED_FILES, '.java')
+        if: contains(steps.file-check.outputs.changed_files, '.java')
         run: |
           javac solutions/*.java
           echo "Running Java Program..."
