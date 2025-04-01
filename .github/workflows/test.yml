@@ -15,7 +15,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch full history for git diff
+          fetch-depth: 0  
 
       - name: Install Dependencies
         run: |
@@ -40,24 +40,29 @@ jobs:
         if: steps.filter.outputs.c == 'true'
         run: |
           gcc solutions/main.c -o solution_c
-          ./solution_c < tests/test.c | tee -a results.log
+          ./solution_c < tests/test.c | tee -a results.log || echo "Error running C program" >> results.log
 
       - name: Compile and Run C++ Program
         if: steps.filter.outputs.cpp == 'true'
         run: |
           g++ solutions/main.cpp -o solution_cpp
-          ./solution_cpp < tests/test.cpp | tee -a results.log
+          ./solution_cpp < tests/test.cpp | tee -a results.log || echo "Error running C++ program" >> results.log
 
       - name: Run Python Program
         if: steps.filter.outputs.python == 'true'
         run: |
-          python3 solutions/main.py < tests/test.py | tee -a results.log
+          python3 solutions/main.py < tests/test.py | tee -a results.log || echo "Error running Python program" >> results.log
 
       - name: Compile and Run Java Program
         if: steps.filter.outputs.java == 'true'
         run: |
           javac solutions/Main.java
-          java -cp solutions Main < tests/MainTest.java | tee -a results.log
+          java -cp solutions Main < tests/MainTest.java | tee -a results.log || echo "Error running Java program" >> results.log
+
+      - name: Debug Test Output
+        run: |
+          echo "### Debugging results.log ###"
+          cat results.log || echo "results.log does not exist"
 
       - name: Count Passed Test Cases
         run: |
