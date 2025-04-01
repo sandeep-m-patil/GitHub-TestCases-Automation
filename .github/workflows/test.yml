@@ -3,10 +3,10 @@ name: Run Code Submissions
 on:
   push:
     paths:
-      - "/*.java"
-      - "/*.c"
-      - "/*.cpp"
-      - "/*.py"
+      - "main/*.java"
+      - "main/*.c"
+      - "main/*.cpp"
+      - "main/*.py"
 
 jobs:
   run-tests:
@@ -19,7 +19,12 @@ jobs:
       - name: Detect Language
         id: detect-language
         run: |
-          FILE=$(find main -type f \( -name ".java" -o -name ".c" -o -name ".cpp" -o -name ".py" \) | head -n 1)
+          FILE=$(find main -type f \( -name "*.java" -o -name "*.c" -o -name "*.cpp" -o -name "*.py" \) | head -n 1)
+          if [ -z "$FILE" ]; then
+            echo "No source file found in main/ directory!"
+            exit 1
+          fi
+
           echo "Detected file: $FILE"
           if [[ $FILE == main/*.java ]]; then
             echo "LANGUAGE=java" >> $GITHUB_ENV
@@ -38,19 +43,35 @@ jobs:
         run: |
           case $LANGUAGE in
             java)
-              javac main/Main.java testcases/javatest.java
-              java -cp testcases $(basename testcases/javatest.java .java)
+              mkdir -p out
+              javac -d out main/Main.java testcases/javatest.java
+              java -cp out testcases.javatest
               ;;
             c)
-              gcc main/main.c testcases/ctest.c -o ctest
-              ./ctest
+              if [ -f testcases/ctest.c ]; then
+                gcc main/main.c testcases/ctest.c -o ctest
+                ./ctest
+              else
+                echo "C test file not found!"
+                exit 1
+              fi
               ;;
             cpp)
-              g++ main/main.cpp testcases/cpptest.cpp -o cpptest
-              ./cpptest
+              if [ -f testcases/cpptest.cpp ]; then
+                g++ main/main.cpp testcases/cpptest.cpp -o cpptest
+                ./cpptest
+              else
+                echo "C++ test file not found!"
+                exit 1
+              fi
               ;;
             python)
-              python3 testcases/pythontest.py
+              if [ -f testcases/pythontest.py ]; then
+                python3 testcases/pythontest.py
+              else
+                echo "Python test file not found!"
+                exit 1
+              fi
               ;;
             *)
               echo "No valid test file found!"
