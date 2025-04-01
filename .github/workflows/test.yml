@@ -28,14 +28,15 @@ jobs:
         id: file-check
         run: |
           if [ -n "${{ github.event.inputs.file_to_test }}" ]; then
-            CHANGED_FILES=${{ github.event.inputs.file_to_test }}
+            CHANGED_FILES="${{ github.event.inputs.file_to_test }}"
           else
-            BEFORE_COMMIT=${{ github.event.before }}
-            if [ -z "$BEFORE_COMMIT" ]; then
-              BEFORE_COMMIT=$(git rev-list --max-parents=0 HEAD)  # Use first commit if none found
+            BEFORE_COMMIT="${{ github.event.before }}"
+            if [ -z "$BEFORE_COMMIT" ] || ! git cat-file -e "$BEFORE_COMMIT"^{commit}; then
+              BEFORE_COMMIT=$(git rev-list --max-parents=0 HEAD)  # Use first commit if invalid
             fi
-            CHANGED_FILES=$(git diff --name-only $BEFORE_COMMIT ${{ github.sha }})
+            CHANGED_FILES=$(git diff --name-only "$BEFORE_COMMIT" "${{ github.sha }}")
           fi
+
           echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
           echo "Files changed: $CHANGED_FILES"
 
