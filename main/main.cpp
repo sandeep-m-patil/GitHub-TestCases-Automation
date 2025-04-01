@@ -7,6 +7,6 @@ class Solution
 public:
     int longestMountain(int arr[], int n)
     {
-        // code for logestMountain
+        // code for logest Mountain
     }
 };
