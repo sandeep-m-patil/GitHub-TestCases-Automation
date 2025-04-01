@@ -56,16 +56,6 @@ jobs:
             exit 1
           fi
 
-      - name: Compile and Run C Program
-        if: env.language == 'C'
-        run: |
-          if [ -z "$(ls -A solutions/*.c 2>/dev/null)" ]; then
-            echo "No C files found. Exiting..."
-            exit 1
-          fi
-          gcc solutions/*.c -o solution_c
-          ./solution_c < tests/test.c
-
       - name: Compile and Run C++ Program
         if: env.language == 'C++'
         run: |
@@ -78,7 +68,29 @@ jobs:
             echo "Compilation failed. Check for errors."
             exit 1
           fi
-          ./solution_cpp < tests/test.cpp
+          
+          # Run the program and save output
+          ./solution_cpp < tests/test.cpp > test_output.log
+
+          # Count passed test cases (Assuming lines containing 'PASS' indicate success)
+          PASSED_TESTS=$(grep -c "PASS" test_output.log || echo 0)
+          TOTAL_TESTS=$(wc -l < tests/test.cpp || echo 0)
+          
+          echo "✅ $PASSED_TESTS out of $TOTAL_TESTS test cases passed." | tee -a $GITHUB_STEP_SUMMARY
+
+      - name: Compile and Run C Program
+        if: env.language == 'C'
+        run: |
+          if [ -z "$(ls -A solutions/*.c 2>/dev/null)" ]; then
+            echo "No C files found. Exiting..."
+            exit 1
+          fi
+          gcc solutions/*.c -o solution_c
+          ./solution_c < tests/test.c > test_output.log
+
+          PASSED_TESTS=$(grep -c "PASS" test_output.log || echo 0)
+          TOTAL_TESTS=$(wc -l < tests/test.c || echo 0)
+          echo "✅ $PASSED_TESTS out of $TOTAL_TESTS test cases passed." | tee -a $GITHUB_STEP_SUMMARY
 
       - name: Run Python Program
         if: env.language == 'Python'
@@ -87,7 +99,11 @@ jobs:
             echo "No Python files found. Exiting..."
             exit 1
           fi
-          python3 solutions/*.py < tests/test.py
+          python3 solutions/*.py < tests/test.py > test_output.log
+
+          PASSED_TESTS=$(grep -c "PASS" test_output.log || echo 0)
+          TOTAL_TESTS=$(wc -l < tests/test.py || echo 0)
+          echo "✅ $PASSED_TESTS out of $TOTAL_TESTS test cases passed." | tee -a $GITHUB_STEP_SUMMARY
 
       - name: Compile and Run Java Program
         if: env.language == 'Java'
@@ -101,4 +117,8 @@ jobs:
             echo "Java compilation failed. Check for errors."
             exit 1
           fi
-          java -cp solutions Solution < tests/Test.java
+          java -cp solutions Solution < tests/Test.java > test_output.log
+
+          PASSED_TESTS=$(grep -c "PASS" test_output.log || echo 0)
+          TOTAL_TESTS=$(wc -l < tests/Test.java || echo 0)
+          echo "✅ $PASSED_TESTS out of $TOTAL_TESTS test cases passed." | tee -a $GITHUB_STEP_SUMMARY
