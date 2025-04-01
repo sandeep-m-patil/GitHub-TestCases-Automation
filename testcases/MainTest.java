@@ -1,6 +1,7 @@
 package testcases;
 import java.util.Arrays;
-import main.Main;
+
+import main.Main; // Adjust the import statement based on your project structure
 
 public class MainTest {
     public static void runTestCase(int[] arr, int expected, int[] passedCount, int[] total) {
