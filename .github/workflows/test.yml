@@ -1,0 +1,85 @@
+name: Run Code Tests
+
+on:
+  push:
+    paths:
+      - "solutions/**.c"
+      - "solutions/**.cpp"
+      - "solutions/**.py"
+      - "solutions/**.java"
+
+jobs:
+  detect-language:
+    runs-on: ubuntu-latest
+    outputs:
+      lang: ${{ steps.detect.outputs.lang }}
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Detect Language
+        id: detect
+        run: |
+          if ls solutions/*.c 1> /dev/null 2>&1; then
+            echo "lang=c" >> $GITHUB_ENV
+          elif ls solutions/*.cpp 1> /dev/null 2>&1; then
+            echo "lang=cpp" >> $GITHUB_ENV
+          elif ls solutions/*.py 1> /dev/null 2>&1; then
+            echo "lang=python" >> $GITHUB_ENV
+          elif ls solutions/*.java 1> /dev/null 2>&1; then
+            echo "lang=java" >> $GITHUB_ENV
+          fi
+
+  test-c:
+    needs: detect-language
+    if: ${{ needs.detect-language.outputs.lang == 'c' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Compile C Program
+        run: gcc solutions/*.c -o solution_c
+
+      - name: Run C Tests
+        run: ./solution_c < tests/c_testcases.txt
+
+  test-cpp:
+    needs: detect-language
+    if: ${{ needs.detect-language.outputs.lang == 'cpp' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Compile C++ Program
+        run: g++ solutions/*.cpp -o solution_cpp
+
+      - name: Run C++ Tests
+        run: ./solution_cpp < tests/cpp_testcases.txt
+
+  test-python:
+    needs: detect-language
+    if: ${{ needs.detect-language.outputs.lang == 'python' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Python Tests
+        run: python3 solutions/*.py < tests/python_testcases.txt
+
+  test-java:
+    needs: detect-language
+    if: ${{ needs.detect-language.outputs.lang == 'java' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Compile Java Program
+        run: javac solutions/*.java
+
+      - name: Run Java Tests
+        run: java Solution < tests/java_testcases.txt
