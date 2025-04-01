@@ -40,21 +40,52 @@ jobs:
         if: steps.filter.outputs.c == 'true'
         run: |
           gcc solutions/main.c -o solution_c
-          ./solution_c < tests/test.c
+          ./solution_c < tests/test.c > test_output.txt
+          echo "C program completed."
 
       - name: Compile and Run C++ Program
         if: steps.filter.outputs.cpp == 'true'
         run: |
           g++ solutions/main.cpp -o solution_cpp
-          ./solution_cpp < tests/test.cpp
+          ./solution_cpp < tests/test.cpp > test_output.txt
+          echo "C++ program completed."
 
       - name: Run Python Program
         if: steps.filter.outputs.python == 'true'
         run: |
-          python3 solutions/main.py < tests/test.py
+          python3 solutions/main.py < tests/test.py > test_output.txt
+          echo "Python program completed."
 
       - name: Compile and Run Java Program
         if: steps.filter.outputs.java == 'true'
         run: |
           javac solutions/Main.java
-          java -cp solutions Main < tests/MainTest.java
+          java -cp solutions Main < tests/MainTest.java > test_output.txt
+          echo "Java program completed."
+
+      - name: Count Passed Test Cases
+        run: |
+          if [ ! -f test_output.txt ]; then
+            echo "No output file found. Exiting..."
+            exit 1
+          fi
+          
+          TOTAL_TESTS=$(wc -l < test_output.txt)
+          PASSED_TESTS=$(grep -c "PASSED" test_output.txt || true)
+          FAILED_TESTS=$((TOTAL_TESTS - PASSED_TESTS))
+          
+          echo "Test Summary:"
+          echo "Total Test Cases: $TOTAL_TESTS"
+          echo "✅ Passed: $PASSED_TESTS"
+          echo "❌ Failed: $FAILED_TESTS"
+
+          echo "TOTAL_TESTS=$TOTAL_TESTS" >> $GITHUB_ENV
+          echo "PASSED_TESTS=$PASSED_TESTS" >> $GITHUB_ENV
+          echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_ENV
+
+      - name: Print Test Summary
+        run: |
+          echo "### Test Summary Report ###"
+          echo "Total: $TOTAL_TESTS"
+          echo "✅ Passed: $PASSED_TESTS"
+          echo "❌ Failed: $FAILED_TESTS"
