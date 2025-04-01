@@ -88,4 +88,4 @@ jobs:
         if: steps.determine-file.outputs.language == 'Java'
         run: |
           javac solutions/*.java
-          java -cp solutions Solution < tests/test.java
+          java -cp solutions Solution < tests/Test.java
