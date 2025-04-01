@@ -3,76 +3,110 @@ name: Run Code Submissions
 on:
   push:
     paths:
-      - "**/*.java"
-      - "**/*.c"
-      - "**/*.cpp"
-      - "**/*.py"
+      - "main/**/*.java"
+      - "main/**/*.c"
+      - "main/**/*.cpp"
+      - "main/**/*.py"
 
 jobs:
   run-tests:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set file and language
+      - name: Install Dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y gcc g++ openjdk-17-jdk python3 python3-pip
+
+      - name: List directory contents for debugging
+        run: |
+          echo "Listing contents of 'main' directory for debugging:"
+          ls -R main
+
+      - name: Detect submitted file and set test file
         id: detect-language
         run: |
-          FILE=$(find . -type f \( -name "*.java" -o -name "*.c" -o -name "*.cpp" -o -name "*.py" \) | head -n 1)
+          FILE=$(find main -type f \( -name "*.java" -o -name "*.c" -o -name "*.cpp" -o -name "*.py" \) | head -n 1)
           echo "Detected file: $FILE"
-          if [[ $FILE == *.java ]]; then
-            echo "TEST_FILE=testcases/MainTest.java" >> $GITHUB_ENV
-          elif [[ $FILE == *.c ]]; then
-            echo "TEST_FILE=testcases/ctest.c" >> $GITHUB_ENV
-          elif [[ $FILE == *.cpp ]]; then
-            echo "TEST_FILE=testcases/cpptest.cpp" >> $GITHUB_ENV
-          elif [[ $FILE == *.py ]]; then
-            echo "TEST_FILE=testcases/pythontest.py" >> $GITHUB_ENV
-          else
+
+          if [[ -z "$FILE" ]]; then
             echo "No valid file detected!"
             exit 1
           fi
 
-      - name: Run respective test cases
+          if [[ $FILE == *.java ]]; then
+            echo "SUBMITTED_FILE=$FILE" >> $GITHUB_ENV
+            echo "TEST_FILE=testcases/MainTest.java" >> $GITHUB_ENV
+            echo "LANGUAGE=Java" >> $GITHUB_ENV
+            echo "::set-output name=language::Java"
+          elif [[ $FILE == *.c ]]; then
+            echo "SUBMITTED_FILE=$FILE" >> $GITHUB_ENV
+            echo "TEST_FILE=testcases/ctest.c" >> $GITHUB_ENV
+            echo "LANGUAGE=C" >> $GITHUB_ENV
+            echo "::set-output name=language::C"
+          elif [[ $FILE == *.cpp ]]; then
+            echo "SUBMITTED_FILE=$FILE" >> $GITHUB_ENV
+            echo "TEST_FILE=testcases/cpptest.cpp" >> $GITHUB_ENV
+            echo "LANGUAGE=C++" >> $GITHUB_ENV
+            echo "::set-output name=language::C++"
+          elif [[ $FILE == *.py ]]; then
+            echo "SUBMITTED_FILE=$FILE" >> $GITHUB_ENV
+            echo "TEST_FILE=testcases/pythontest.py" >> $GITHUB_ENV
+            echo "LANGUAGE=Python" >> $GITHUB_ENV
+            echo "::set-output name=language::Python"
+          else
+            echo "Unsupported file type!"
+            exit 1
+          fi
+
+      - name: Compile and Run Java Program
+        if: steps.detect-language.outputs.language == 'Java'
         run: |
-          case $TEST_FILE in
-            testcases/MainTest.java)
-              javac $TEST_FILE
-              if [ $? -eq 0 ]; then
-                java testcases.javatest
-              else
-                echo "Java test failed!"
-                exit 1
-              fi
-              ;;
-            testcases/ctest.c)
-              gcc $TEST_FILE -o ctest
-              if [ $? -eq 0 ]; then
-                echo "Running C test cases"
-                ./ctest
-              else
-                echo "C test failed!"
-                exit 1
-              fi
-              ;;
-            testcases/cpptest.cpp)
-              g++ $TEST_FILE -o cpptest
-              if [ $? -eq 0 ]; then
-                echo "Running C++ test cases"
-                ./cpptest
-              else
-                echo "C++ test failed!"
-                exit 1
-              fi
-              ;;
-            testcases/pythontest.py)
-              echo "Running Python test cases"
-              python3 $TEST_FILE
-              if [ $? -ne 0 ]; then
-                echo "Python test failed!"
-              fi
-              echo "No valid test file found!"
-              exit 1
-              ;;
-          esac
+          echo "Compiling Java files..."
+          javac -d . $SUBMITTED_FILE $TEST_FILE
+          if [ $? -eq 0 ]; then
+            echo "Running Java test..."
+            java -cp . testcases.MainTest
+          else
+            echo "Java compilation failed!"
+            exit 1
+          fi
+
+      - name: Compile and Run C Program
+        if: steps.detect-language.outputs.language == 'C'
+        run: |
+          echo "Compiling C program..."
+          gcc $SUBMITTED_FILE $TEST_FILE -o ctest
+          if [ $? -eq 0 ]; then
+            echo "Running C test cases..."
+            ./ctest
+          else
+            echo "C test failed!"
+            exit 1
+          fi
+
+      - name: Compile and Run C++ Program
+        if: steps.detect-language.outputs.language == 'C++'
+        run: |
+          echo "Compiling C++ program..."
+          g++ $SUBMITTED_FILE $TEST_FILE -o cpptest
+          if [ $? -eq 0 ]; then
+            echo "Running C++ test cases..."
+            ./cpptest
+          else
+            echo "C++ test failed!"
+            exit 1
+          fi
+
+      - name: Run Python Program
+        if: steps.detect-language.outputs.language == 'Python'
+        run: |
+          echo "Running Python test cases..."
+          python3 -m unittest testcases.pythontest
+          if [ $? -ne 0 ]; then
+            echo "Python test failed!"
+            exit 1
+          fi
