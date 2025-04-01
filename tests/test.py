@@ -1,41 +1,64 @@
-def sorted_squares(nums):
-    left, right = 0, len(nums) - 1
-    result = [0] * len(nums)
-    pos = len(nums) - 1
+# /GitHub-TestCases-Automat.../testcases/pythontest.py
+from main.main import Solution  # Absolute import
 
-    while left <= right:
-        if abs(nums[left]) > abs(nums[right]):
-            result[pos] = nums[left] ** 2
-            left += 1
-        else:
-            result[pos] = nums[right] ** 2
-            right -= 1
-        pos -= 1
+def run_test_case(arr, expected, passed_count, total):
+    total[0] += 1
+    solution = Solution()
+    actual = solution.longestMountain(arr)
 
-    return result
+    if actual == expected:
+        passed_count[0] += 1
+        print(f"\n✅ Test passed {passed_count[0]}")
+    else:
+        print(f"\n❌ Test failed for input: {arr}")
+        print(f"Actual: {actual}, Expected: {expected}")
 
-def run_test_cases():
-    test_cases = [
-        [-10, -3, -2, 0, 1, 5, 7, 12],
-        [-10000, -500, -1, 0, 2, 3, 4000],
-        [-9, -8, -5, -3, -2, 0, 1, 4, 6, 10],
-        [-7, -3, 2, 3, 11],
-        [-6, -5, -3, -1, 0, 2, 3, 4, 8]
-    ]
+def main():
+    passed_count = [0]
+    total = [0]
 
-    expected_outputs = [
-        [0, 1, 4, 9, 25, 49, 100, 144],
-        [0, 1, 4, 9, 250000, 16000000, 100000000],
-        [0, 1, 4, 9, 16, 25, 36, 64, 81, 100],
-        [4, 9, 9, 49, 121],
-        [0, 1, 4, 9, 9, 16, 25, 36, 64]
-    ]
+    # Basic Cases
+    run_test_case([2, 1, 4, 7, 3, 2, 5], 5, passed_count, total)
+    run_test_case([1, 3, 5, 3, 4, 2, 0, 8, 10, 7, 6, 5, 4, 3, 1], 9, passed_count, total)
+    run_test_case([2, 1, 3, 2, 1, 5, 6, 5, 2, 1], 6, passed_count, total)
+    run_test_case([2, 2, 2], 0, passed_count, total)
 
-    for idx, test in enumerate(test_cases):
-        result = sorted_squares(test)
-        print(f"\nTest Case {idx + 1}")
-        print(f"Input Given: {test}")
-        print(f"Resultant Output: {result}")
-        print(f"Test Case: {'✅ Passed' if result == expected_outputs[idx] else '❌ Not Passed'}")
+    # Edge Cases
+    run_test_case([1], 0, passed_count, total)
+    run_test_case([1, 2], 0, passed_count, total)
+    run_test_case([1, 2, 3], 0, passed_count, total)
 
-run_test_cases()
+    # Boundary Cases
+    run_test_case([0, 1, 0], 3, passed_count, total)
+    run_test_case([5, 4, 3, 2, 1], 0, passed_count, total)
+
+    # Various Mountain Patterns
+    run_test_case([1, 3, 2, 4, 3, 2, 1], 5, passed_count, total)
+    run_test_case([1, 2, 1, 2, 1], 3, passed_count, total)
+    run_test_case([2, 1, 2], 0, passed_count, total)
+
+    # Special Cases
+    run_test_case([0, 0, 1, 0, 0], 3, passed_count, total)
+    run_test_case([1, 2, 3, 2, 1, 2, 3, 2, 1], 5, passed_count, total)
+
+    # Flat Sections (Edge Cases)
+    run_test_case([1, 2, 2, 2, 1], 0, passed_count, total)
+    run_test_case([1, 2, 3, 3, 2, 1], 0, passed_count, total)
+    run_test_case([1, 3, 5, 3, 1, 2, 4, 6, 7], 5, passed_count, total)
+    run_test_case([1, 2, 3, 2, 1, 2, 3, 4, 3, 1, 5, 6, 5, 2, 1], 6, passed_count, total)
+
+    # Large Mountain with 10000 Values
+    plateau_mountain = [5] * 4999 + [10] + [5] * 5000
+    run_test_case(plateau_mountain, 3, passed_count, total)
+
+    # Large Mountain with 999 Values
+    large_mountain = list(range(1, 501)) + list(range(499, 0, -1))
+    run_test_case(large_mountain, 999, passed_count, total)
+
+    # Summary
+    print(f"\nPassed {passed_count[0]} / {total[0]} test cases!")
+    if passed_count[0] != total[0]:
+        raise AssertionError("Some test cases failed!")
+
+if __name__ == "__main__":
+    main()
