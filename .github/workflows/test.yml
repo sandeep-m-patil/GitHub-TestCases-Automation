@@ -44,8 +44,8 @@ jobs:
           case $LANGUAGE in
             java)
               mkdir -p out
-              javac -d out main/Main.java testcases/javatest.java
-              java -cp out testcases.javatest
+              javac -d out main/Main.java testcases/MainTest.java
+              java -cp out testcases.MainTest
               ;;
             c)
               if [ -f testcases/ctest.c ]; then
