@@ -3,9 +3,8 @@ class Solution:
         n = len(arr)
         if n < 3:
             return 0
-
         longest = 0
-#forloop
+        
         for i in range(1, n - 1):
             # Check if arr[i] is a peak
             if arr[i - 1] < arr[i] > arr[i + 1]:
