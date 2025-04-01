@@ -1,4 +1,5 @@
 package main;
+
 public class Main {
     public static int longestMountain(int[] arr) {
         if (arr.length < 3) return 0;
@@ -20,7 +21,6 @@ public class Main {
 
         return longest;
 
-        ///ans
     }
 
     public static void main(String[] args) {
