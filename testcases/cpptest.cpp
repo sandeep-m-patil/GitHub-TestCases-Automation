@@ -13,17 +13,17 @@ void runTestCase(int arr[], int n, int expected, int *passedCount, int *total)
     if (actual == expected)
     {
         (*passedCount)++;
-        cout << "\n✅  Test passed for input: ";
+        cout << "\n✅ " << *(passedCount);
     }
     else
     {
         cout << "\n ❌ Test failed for input: ";
+        for (int i = 0; i < n; i++)
+        {
+            cout << arr[i] << " ";
+        }
     }
 
-    for (int i = 0; i < n; i++)
-    {
-        cout << arr[i] << " ";
-    }
     if (actual != expected)
     {
         cout << "\nActual: " << actual << ", Expected: " << expected << endl;
