@@ -27,41 +27,45 @@ jobs:
       - name: Detect Changed Files
         id: file-check
         run: |
-          if [ -z "${{ github.event.inputs.file_to_test }}" ]; then
-            CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-          else
+          if [ -n "${{ github.event.inputs.file_to_test }}" ]; then
             CHANGED_FILES=${{ github.event.inputs.file_to_test }}
+          else
+            BEFORE_COMMIT=${{ github.event.before }}
+            if [ -z "$BEFORE_COMMIT" ]; then
+              BEFORE_COMMIT=$(git rev-list --max-parents=0 HEAD)  # Use first commit if none found
+            fi
+            CHANGED_FILES=$(git diff --name-only $BEFORE_COMMIT ${{ github.sha }})
           fi
           echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
           echo "Files changed: $CHANGED_FILES"
 
-      # Run C tests only if a C file is modified or manually triggered
+      # Run C tests only if a C file is changed or manually triggered
       - name: Compile and Run C Program
         if: contains(env.CHANGED_FILES, '.c')
         run: |
-          gcc solutions/*.c -o solution_c
+          gcc $CHANGED_FILES -o solution_c
           echo "Test Case 1: Input 5 10" && echo "5 10" | ./solution_c
           echo "Test Case 2: Input 3 7" && echo "3 7" | ./solution_c
 
-      # Run C++ tests only if a C++ file is modified or manually triggered
+      # Run C++ tests only if a C++ file is changed or manually triggered
       - name: Compile and Run C++ Program
         if: contains(env.CHANGED_FILES, '.cpp')
         run: |
-          g++ solutions/*.cpp -o solution_cpp
+          g++ $CHANGED_FILES -o solution_cpp
           echo "Test Case 1: Input 5 10" && echo "5 10" | ./solution_cpp
           echo "Test Case 2: Input 3 7" && echo "3 7" | ./solution_cpp
 
-      # Run Python tests only if a Python file is modified or manually triggered
+      # Run Python tests only if a Python file is changed or manually triggered
       - name: Run Python Program
         if: contains(env.CHANGED_FILES, '.py')
         run: |
-          echo "Test Case 1: Input 5 10" && echo "5 10" | python3 solutions/*.py
-          echo "Test Case 2: Input 3 7" && echo "3 7" | python3 solutions/*.py
+          echo "Test Case 1: Input 5 10" && echo "5 10" | python3 $CHANGED_FILES
+          echo "Test Case 2: Input 3 7" && echo "3 7" | python3 $CHANGED_FILES
 
-      # Run Java tests only if a Java file is modified or manually triggered
+      # Run Java tests only if a Java file is changed or manually triggered
       - name: Compile and Run Java Program
         if: contains(env.CHANGED_FILES, '.java')
         run: |
-          javac solutions/*.java
+          javac $CHANGED_FILES
           echo "Test Case 1: Input 5 10" && echo "5 10" | java -cp solutions Solution
           echo "Test Case 2: Input 3 7" && echo "3 7" | java -cp solutions Solution
