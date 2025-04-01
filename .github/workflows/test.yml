@@ -1,61 +1,49 @@
-name: Run Tests
+name: Run Code Tests
 
 on:
   push:
     paths:
-      - 'solutions/*.c'
-      - 'solutions/*.cpp'
-      - 'solutions/*.py'
-      - 'solutions/*.java'
+      - "solutions/**"
 
 jobs:
-  detect-language:
-    runs-on: ubuntu-latest
-    outputs:
-      lang: ${{ steps.detect.outputs.lang }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      
-      - name: Detect Language
-        id: detect
-        run: |
-          if ls solutions/*.c 1> /dev/null 2>&1; then
-            echo "lang=c" >> $GITHUB_ENV
-          elif ls solutions/*.cpp 1> /dev/null 2>&1; then
-            echo "lang=cpp" >> $GITHUB_ENV
-          elif ls solutions/*.py 1> /dev/null 2>&1; then
-            echo "lang=python" >> $GITHUB_ENV
-          elif ls solutions/*.java 1> /dev/null 2>&1; then
-            echo "lang=java" >> $GITHUB_ENV
-          fi
-
   run-tests:
-    needs: detect-language
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      
-      - name: Run C Tests
-        if: env.lang == 'c'
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
         run: |
-          gcc solutions/*.c -o solution
-          ./solution < tests/c_testcases.txt
-      
-      - name: Run C++ Tests
-        if: env.lang == 'cpp'
+          sudo apt update
+          sudo apt install -y gcc g++ openjdk-17-jdk python3
+
+      # Run C tests
+      - name: Compile and Run C Program
+        if: hashFiles('solutions/*.c') != ''
         run: |
-          g++ solutions/*.cpp -o solution
-          ./solution < tests/cpp_testcases.txt
-      
-      - name: Run Python Tests
-        if: env.lang == 'python'
+          gcc solutions/*.c -o solution_c
+          echo "Test Case 1: Input 5 10" && echo "5 10" | ./solution_c
+          echo "Test Case 2: Input 3 7" && echo "3 7" | ./solution_c
+
+      # Run C++ tests
+      - name: Compile and Run C++ Program
+        if: hashFiles('solutions/*.cpp') != ''
         run: |
-          python3 solutions/*.py < tests/python_testcases.txt
-      
-      - name: Run Java Tests
-        if: env.lang == 'java'
+          g++ solutions/*.cpp -o solution_cpp
+          echo "Test Case 1: Input 5 10" && echo "5 10" | ./solution_cpp
+          echo "Test Case 2: Input 3 7" && echo "3 7" | ./solution_cpp
+
+      # Run Python tests
+      - name: Run Python Program
+        if: hashFiles('solutions/*.py') != ''
+        run: |
+          echo "Test Case 1: Input 5 10" && echo "5 10" | python3 solutions/*.py
+          echo "Test Case 2: Input 3 7" && echo "3 7" | python3 solutions/*.py
+
+      # Run Java tests
+      - name: Compile and Run Java Program
+        if: hashFiles('solutions/*.java') != ''
         run: |
           javac solutions/*.java
-          java -cp solutions $(basename $(ls solutions/*.java .java)) < tests/java_testcases.txt
+          echo "Test Case 1: Input 5 10" && echo "5 10" | java Solution
+          echo "Test Case 2: Input 3 7" && echo "3 7" | java Solution
