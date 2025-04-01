@@ -1,5 +1,5 @@
 # /GitHub-TestCases-Automat.../testcases/pythontest.py
-from ..main.main import Solution  # Import Solution from main.py
+from main.main import Solution  # Absolute import
 
 def run_test_case(arr, expected, passed_count, total):
     total[0] += 1
@@ -8,13 +8,13 @@ def run_test_case(arr, expected, passed_count, total):
 
     if actual == expected:
         passed_count[0] += 1
-        print(f"\n✅ Test passed for input: {arr}")
+        print(f"\n✅ Test passed {passed_count[0]}")
     else:
         print(f"\n❌ Test failed for input: {arr}")
         print(f"Actual: {actual}, Expected: {expected}")
 
 def main():
-    passed_count = [0]  # Use a list to modify the count in the function
+    passed_count = [0]
     total = [0]
 
     # Basic Cases
