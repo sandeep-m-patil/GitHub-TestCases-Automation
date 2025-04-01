@@ -7,7 +7,7 @@ class Solution:
         left, right = 0, n - 1
         index = n - 1  # Start filling from the end
 
-        while left <= right:
+        while left <= right:#svssvdsfsdfgdfg
             left_square = nums[left] ** 2
             right_square = nums[right] ** 2
 
