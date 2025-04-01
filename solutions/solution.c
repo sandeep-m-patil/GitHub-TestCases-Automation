@@ -25,7 +25,7 @@ int* sortedSquares(int* nums, int numsSize, int* returnSize) {
             result[index--] = rightSquare;
             right--;
         }
-    }
+    }/*now lets make it*/
 
     return result;
 }
