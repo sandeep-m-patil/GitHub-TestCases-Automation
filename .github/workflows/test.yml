@@ -3,17 +3,10 @@ name: Run Code Submissions
 on:
   push:
     paths:
-<<<<<<< HEAD
-      - "main/*.java"
-      - "main/*.c"
-      - "main/*.cpp"
-      - "main/*.py"
-=======
       - "/*.java"
       - "/*.c"
       - "/*.cpp"
       - "/*.py"
->>>>>>> c867e975b737a9171c6698e4b6a5cbbe6875b109
 
 jobs:
   run-tests:
@@ -23,62 +16,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-<<<<<<< HEAD
-      - name: Detect Language
-        id: detect-language
-        run: |
-          FILE=$(find main -type f \( -name "*.java" -o -name "*.c" -o -name "*.cpp" -o -name "*.py" \) | head -n 1)
-          if [ -z "$FILE" ]; then
-            echo "No source file found in main/ directory!"
-            exit 1
-          fi
-
-          echo "Detected file: $FILE"
-          if [[ $FILE == main/*.java ]]; then
-            echo "LANGUAGE=java" >> $GITHUB_ENV
-          elif [[ $FILE == main/*.c ]]; then
-            echo "LANGUAGE=c" >> $GITHUB_ENV
-          elif [[ $FILE == main/*.cpp ]]; then
-            echo "LANGUAGE=cpp" >> $GITHUB_ENV
-          elif [[ $FILE == main/*.py ]]; then
-            echo "LANGUAGE=python" >> $GITHUB_ENV
-          else
-            echo "No valid file detected!"
-            exit 1
-          fi
-
-      - name: Run Tests
-        run: |
-          case $LANGUAGE in
-            java)
-              mkdir -p out
-              javac -d out main/Main.java testcases/javatest.java
-              java -cp out testcases.javatest
-              ;;
-            c)
-              if [ -f testcases/ctest.c ]; then
-                gcc main/main.c testcases/ctest.c -o ctest
-                ./ctest
-              else
-                echo "C test file not found!"
-                exit 1
-              fi
-              ;;
-            cpp)
-              if [ -f testcases/cpptest.cpp ]; then
-                g++ main/main.cpp testcases/cpptest.cpp -o cpptest
-                ./cpptest
-              else
-                echo "C++ test file not found!"
-                exit 1
-              fi
-              ;;
-            python)
-              if [ -f testcases/pythontest.py ]; then
-                python3 testcases/pythontest.py
-              else
-                echo "Python test file not found!"
-=======
       - name: Set file and language
         id: detect-language
         run: |
@@ -131,7 +68,6 @@ jobs:
               python3 $TEST_FILE
               if [ $? -ne 0 ]; then
                 echo "Python test failed!"
->>>>>>> c867e975b737a9171c6698e4b6a5cbbe6875b109
                 exit 1
               fi
               ;;
