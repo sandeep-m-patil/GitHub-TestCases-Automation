@@ -3,10 +3,10 @@ name: Run Code Submissions
 on:
   push:
     paths:
-      - "/*.java"
-      - "/*.c"
-      - "/*.cpp"
-      - "/*.py"
+      - "**/*.java"
+      - "**/*.c"
+      - "**/*.cpp"
+      - "**/*.py"
 
 jobs:
   run-tests:
@@ -19,7 +19,7 @@ jobs:
       - name: Set file and language
         id: detect-language
         run: |
-          FILE=$(find . -type f \( -name ".java" -o -name ".c" -o -name ".cpp" -o -name ".py" \) | head -n 1)
+          FILE=$(find . -type f \( -name "*.java" -o -name "*.c" -o -name "*.cpp" -o -name "*.py" \) | head -n 1)
           echo "Detected file: $FILE"
           if [[ $FILE == *.java ]]; then
             echo "TEST_FILE=testcases/javatest.java" >> $GITHUB_ENV
@@ -28,7 +28,7 @@ jobs:
           elif [[ $FILE == *.cpp ]]; then
             echo "TEST_FILE=testcases/cpptest.cpp" >> $GITHUB_ENV
           elif [[ $FILE == *.py ]]; then
-            echo "TEST_FILE=testcases/pythontest.python" >> $GITHUB_ENV
+            echo "TEST_FILE=testcases/pythontest.py" >> $GITHUB_ENV
           else
             echo "No valid file detected!"
             exit 1
@@ -40,7 +40,7 @@ jobs:
             testcases/javatest.java)
               javac $TEST_FILE
               if [ $? -eq 0 ]; then
-                java ${TEST_FILE%.java}
+                java testcases.javatest
               else
                 echo "Java test failed!"
                 exit 1
@@ -49,7 +49,7 @@ jobs:
             testcases/ctest.c)
               gcc $TEST_FILE -o ctest
               if [ $? -eq 0 ]; then
-                echo "running c test cases"
+                echo "Running C test cases"
                 ./ctest
               else
                 echo "C test failed!"
@@ -59,15 +59,15 @@ jobs:
             testcases/cpptest.cpp)
               g++ $TEST_FILE -o cpptest
               if [ $? -eq 0 ]; then
-                echo "running cpp test cases"
+                echo "Running C++ test cases"
                 ./cpptest
               else
                 echo "C++ test failed!"
                 exit 1
               fi
               ;;
-             echo "running python test cases"
-            python -m testcases.pythontest)
+            testcases/pythontest.py)
+              echo "Running Python test cases"
               python3 $TEST_FILE
               if [ $? -ne 0 ]; then
                 echo "Python test failed!"
