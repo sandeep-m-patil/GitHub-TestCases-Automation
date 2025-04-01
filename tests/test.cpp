@@ -66,7 +66,7 @@ void runTestCases() {
         bool passed = (result == expectedOutputs[i]);
         cout << "Test Case: " << (passed ? "✅ Passed" : "❌ Not Passed") << "\n";
     }
-}
+}/*this is now c++ file*/
 
 int main() {
     runTestCases();
