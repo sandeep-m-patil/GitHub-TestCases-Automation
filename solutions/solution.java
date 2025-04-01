@@ -30,6 +30,6 @@ class Solution {
         int[] result = solution.sortedSquares(nums);
 
         System.out.println("Sorted Squares: " + Arrays.toString(result));/*lets kep it like its happening now */
-    }/*gdfgdfsgdgdfgdfgdsfgdsfgsd */
+    }/*gdfgdfsgdgdfgdfgdsfgdsfgsd */ /*dsfhjdsbhsdbvdsfhjvbdfjvhbdfsjbvgdfsgvdfgdfgdfbdsfkgndskfl */
 }
 /*vvnbv */
