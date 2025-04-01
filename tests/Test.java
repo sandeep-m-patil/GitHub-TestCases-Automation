@@ -1,6 +1,6 @@
 import java.util.Arrays;
 //dasfasdfsd
-public class Solution {
+public class Test {
     public static int[] sortedSquares(int[] nums) {
         int left = 0, right = nums.length - 1;
         int[] result = new int[nums.length];
