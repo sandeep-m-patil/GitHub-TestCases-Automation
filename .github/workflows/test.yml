@@ -1,23 +1,22 @@
-name: Run Code Tests
+name: Run Tests
 
 on:
   push:
     paths:
-      - "solutions/**.c"
-      - "solutions/**.cpp"
-      - "solutions/**.py"
-      - "solutions/**.java"
+      - 'solutions/*.c'
+      - 'solutions/*.cpp'
+      - 'solutions/*.py'
+      - 'solutions/*.java'
 
 jobs:
   detect-language:
     runs-on: ubuntu-latest
     outputs:
       lang: ${{ steps.detect.outputs.lang }}
-    
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
       - name: Detect Language
         id: detect
         run: |
@@ -31,55 +30,32 @@ jobs:
             echo "lang=java" >> $GITHUB_ENV
           fi
 
-  test-c:
+  run-tests:
     needs: detect-language
-    if: ${{ needs.detect-language.outputs.lang == 'c' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Compile C Program
-        run: gcc solutions/*.c -o solution_c
-
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
       - name: Run C Tests
-        run: ./solution_c < tests/c_testcases.txt
-
-  test-cpp:
-    needs: detect-language
-    if: ${{ needs.detect-language.outputs.lang == 'cpp' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Compile C++ Program
-        run: g++ solutions/*.cpp -o solution_cpp
-
+        if: env.lang == 'c'
+        run: |
+          gcc solutions/*.c -o solution
+          ./solution < tests/c_testcases.txt
+      
       - name: Run C++ Tests
-        run: ./solution_cpp < tests/cpp_testcases.txt
-
-  test-python:
-    needs: detect-language
-    if: ${{ needs.detect-language.outputs.lang == 'python' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
+        if: env.lang == 'cpp'
+        run: |
+          g++ solutions/*.cpp -o solution
+          ./solution < tests/cpp_testcases.txt
+      
       - name: Run Python Tests
-        run: python3 solutions/*.py < tests/python_testcases.txt
-
-  test-java:
-    needs: detect-language
-    if: ${{ needs.detect-language.outputs.lang == 'java' }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Compile Java Program
-        run: javac solutions/*.java
-
+        if: env.lang == 'python'
+        run: |
+          python3 solutions/*.py < tests/python_testcases.txt
+      
       - name: Run Java Tests
-        run: java Solution < tests/java_testcases.txt
+        if: env.lang == 'java'
+        run: |
+          javac solutions/*.java
+          java -cp solutions $(basename $(ls solutions/*.java .java)) < tests/java_testcases.txt
