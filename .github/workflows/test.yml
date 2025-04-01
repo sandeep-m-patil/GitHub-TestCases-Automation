@@ -5,6 +5,13 @@ on:
     paths:
       - "solutions/**"
 
+  workflow_dispatch:
+    inputs:
+      file_to_test:
+        description: 'Specific file to test (example: solutions/Solution.java)'
+        required: false
+        default: ''
+
 jobs:
   run-tests:
     runs-on: ubuntu-latest
@@ -17,32 +24,43 @@ jobs:
           sudo apt update
           sudo apt install -y gcc g++ openjdk-17-jdk python3
 
-      # Run C tests
+      - name: Detect Changed Files
+        id: file-check
+        run: |
+          if [ -z "${{ github.event.inputs.file_to_test }}" ]; then
+            CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          else
+            CHANGED_FILES=${{ github.event.inputs.file_to_test }}
+          fi
+          echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
+          echo "Files changed: $CHANGED_FILES"
+
+      # Run C tests only if a C file is modified or manually triggered
       - name: Compile and Run C Program
-        if: hashFiles('solutions/*.c') != ''
+        if: contains(env.CHANGED_FILES, '.c')
         run: |
           gcc solutions/*.c -o solution_c
           echo "Test Case 1: Input 5 10" && echo "5 10" | ./solution_c
           echo "Test Case 2: Input 3 7" && echo "3 7" | ./solution_c
 
-      # Run C++ tests
+      # Run C++ tests only if a C++ file is modified or manually triggered
       - name: Compile and Run C++ Program
-        if: hashFiles('solutions/*.cpp') != ''
+        if: contains(env.CHANGED_FILES, '.cpp')
         run: |
           g++ solutions/*.cpp -o solution_cpp
           echo "Test Case 1: Input 5 10" && echo "5 10" | ./solution_cpp
           echo "Test Case 2: Input 3 7" && echo "3 7" | ./solution_cpp
 
-      # Run Python tests
+      # Run Python tests only if a Python file is modified or manually triggered
       - name: Run Python Program
-        if: hashFiles('solutions/*.py') != ''
+        if: contains(env.CHANGED_FILES, '.py')
         run: |
           echo "Test Case 1: Input 5 10" && echo "5 10" | python3 solutions/*.py
           echo "Test Case 2: Input 3 7" && echo "3 7" | python3 solutions/*.py
 
-      # Run Java tests
+      # Run Java tests only if a Java file is modified or manually triggered
       - name: Compile and Run Java Program
-        if: hashFiles('solutions/*.java') != ''
+        if: contains(env.CHANGED_FILES, '.java')
         run: |
           javac solutions/*.java
           echo "Test Case 1: Input 5 10" && echo "5 10" | java -cp solutions Solution
