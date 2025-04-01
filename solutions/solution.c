@@ -1,9 +1,8 @@
 #include <stdio.h>
-#include <stdlib.h>/***ala hedga */
+#include <stdlib.h>
 /*sdasdfdasfsdfsd*/
-/**
- * Note: The returned array must be malloced, assume caller calls free().
- */
+
+
 int* sortedSquares(int* nums, int numsSize, int* returnSize) {
     *returnSize = numsSize;  // Set the return size
 
