@@ -18,7 +18,7 @@ public:
                 result[index--] = leftSquare;
                 left++;
             } else {
-                result[index--] = rightSquare;
+                result[index--] = rightSquare;//fsfsdafdddddddddddddddddddd
                 right--;
             }
         }/*head to safe jpne*/
