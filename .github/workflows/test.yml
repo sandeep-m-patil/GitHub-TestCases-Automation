@@ -45,5 +45,5 @@ jobs:
         if: hashFiles('solutions/*.java') != ''
         run: |
           javac solutions/*.java
-          echo "Test Case 1: Input 5 10" && echo "5 10" | java Solution
-          echo "Test Case 2: Input 3 7" && echo "3 7" | java Solution
+          echo "Test Case 1: Input 5 10" && echo "5 10" | java -cp solutions Solution
+          echo "Test Case 2: Input 3 7" && echo "3 7" | java -cp solutions Solution
