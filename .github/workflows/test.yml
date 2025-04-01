@@ -22,7 +22,7 @@ jobs:
           FILE=$(find . -type f \( -name ".java" -o -name ".c" -o -name ".cpp" -o -name ".py" \) | head -n 1)
           echo "Detected file: $FILE"
           if [[ $FILE == *.java ]]; then
-            echo "TEST_FILE=testcases/javatest.java" >> $GITHUB_ENV
+            echo "TEST_FILE=testcases/MainTest.java" >> $GITHUB_ENV
           elif [[ $FILE == *.c ]]; then
             echo "TEST_FILE=testcases/ctest.c" >> $GITHUB_ENV
           elif [[ $FILE == *.cpp ]]; then
@@ -37,7 +37,7 @@ jobs:
       - name: Run respective test cases
         run: |
           case $TEST_FILE in
-            testcases/javatest.java)
+            testcases/MainTest.java)
               javac $TEST_FILE
               if [ $? -eq 0 ]; then
                 java ${TEST_FILE%.java}
