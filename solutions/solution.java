@@ -32,4 +32,3 @@ class Solution {
         System.out.println("Sorted Squares: " + Arrays.toString(result));
     }
 }
-/*snkjdbsgjkdfjkgdfkjg */

@@ -39,9 +39,13 @@ public class Solution {
 
         for (int i = 0; i < testCases.length; i++) {
             int[] result = sortedSquares(testCases[i]);
-            System.out.println("\nTest Case " + (i + 1));
-            System.out.print("Input Given: ");
-            System.out.println(Arrays.toString(testCases[i]));
-            System.out.print("Resultant Output: ");
-            System.out.println(Arrays.toString(result));
-            System.out.println("Test Case: " + (Arrays.equals(result, expectedOutputs[i]) ?
+            System.out.println("\n-------------------------------");
+            System.out.println("Test Case " + (i + 1));
+            System.out.println("Input Given: " + Arrays.toString(testCases[i]));
+            System.out.println("Expected Output: " + Arrays.toString(expectedOutputs[i]));
+            System.out.println("Resultant Output: " + Arrays.toString(result));
+            System.out.println("Test Case: " + (Arrays.equals(result, expectedOutputs[i]) ? "Passed ✅" : "Failed ❌"));
+        }
+        System.out.println("\n-------------------------------");
+    }
+}
