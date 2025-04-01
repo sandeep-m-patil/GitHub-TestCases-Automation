@@ -39,53 +39,66 @@ jobs:
           fi
 
           echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
-          echo "::set-output name=changed_files::$CHANGED_FILES"
 
       - name: Determine File Type
         id: determine-file
         run: |
           if echo "$CHANGED_FILES" | grep -qE '\.c$'; then
             echo "language=C" >> $GITHUB_ENV
-            echo "::set-output name=language::C"
           elif echo "$CHANGED_FILES" | grep -qE '\.cpp$'; then
             echo "language=C++" >> $GITHUB_ENV
-            echo "::set-output name=language::C++"
           elif echo "$CHANGED_FILES" | grep -qE '\.py$'; then
             echo "language=Python" >> $GITHUB_ENV
-            echo "::set-output name=language::Python"
           elif echo "$CHANGED_FILES" | grep -qE '\.java$'; then
             echo "language=Java" >> $GITHUB_ENV
-            echo "::set-output name=language::Java"
           else
             echo "No relevant file changes detected. Exiting..."
             exit 1
           fi
 
-     
-
       - name: Compile and Run C Program
-        if: steps.determine-file.outputs.language == 'C'
+        if: env.language == 'C'
         run: |
+          if [ -z "$(ls -A solutions/*.c 2>/dev/null)" ]; then
+            echo "No C files found. Exiting..."
+            exit 1
+          fi
           gcc solutions/*.c -o solution_c
           ./solution_c < tests/test.c
 
       - name: Compile and Run C++ Program
-        if: steps.determine-file.outputs.language == 'C++'
+        if: env.language == 'C++'
         run: |
+          if [ -z "$(ls -A solutions/*.cpp 2>/dev/null)" ]; then
+            echo "No C++ files found. Exiting..."
+            exit 1
+          fi
           g++ solutions/*.cpp -o solution_cpp
+          if [ $? -ne 0 ]; then
+            echo "Compilation failed. Check for errors."
+            exit 1
+          fi
           ./solution_cpp < tests/test.cpp
 
       - name: Run Python Program
-        if: steps.determine-file.outputs.language == 'Python'
+        if: env.language == 'Python'
         run: |
-          if [ ! -f solutions/*.py ]; then
-            echo "Error: Python script not found!"
+          if [ -z "$(ls -A solutions/*.py 2>/dev/null)" ]; then
+            echo "No Python files found. Exiting..."
             exit 1
           fi
           python3 solutions/*.py < tests/test.py
 
       - name: Compile and Run Java Program
-        if: steps.determine-file.outputs.language == 'Java'
+        if: env.language == 'Java'
         run: |
+          if [ -z "$(ls -A solutions/*.java 2>/dev/null)" ]; then
+            echo "No Java files found. Exiting..."
+            exit 1
+          fi
           javac solutions/*.java
+          if [ $? -ne 0 ]; then
+            echo "Java compilation failed. Check for errors."
+            exit 1
+          fi
           java -cp solutions Solution < tests/Test.java
