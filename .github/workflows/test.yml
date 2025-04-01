@@ -39,144 +39,50 @@ jobs:
       - name: Compile and Run C Program
         if: steps.filter.outputs.c == 'true'
         run: |
-          gcc solutions/*.c -o solution_c
-          ./solution_c < tests/test.c > test_output.txt
-          echo "C program completed."
+          gcc solutions/main.c -o solution_c
+          OUTPUT=$(./solution_c < tests/test.c)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | tee results.log
 
       - name: Compile and Run C++ Program
         if: steps.filter.outputs.cpp == 'true'
         run: |
-          g++ solutions/*.cpp -o solution_cpp || { echo "C++ compilation failed"; exit 1; }
-          ./solution_cpp < tests/test.cpp > test_output.txt
-          echo "C++ program completed."
+          g++ solutions/main.cpp -o solution_cpp
+          OUTPUT=$(./solution_cpp < tests/test.cpp)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | tee results.log
 
       - name: Run Python Program
         if: steps.filter.outputs.python == 'true'
         run: |
-          python3 solutions/main.py < tests/test.py > test_output.txt
-          echo "Python program completed."
+          OUTPUT=$(python3 solutions/main.py < tests/test.py)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | tee results.log
 
       - name: Compile and Run Java Program
         if: steps.filter.outputs.java == 'true'
         run: |
-          javac solutions/*.java
-          java -cp solutions Main < tests/MainTest.java > test_output.txt
-          echo "Java program completed."
+          javac solutions/Main.java
+          OUTPUT=$(java -cp solutions Main < tests/MainTest.java)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | tee results.log
 
       - name: Count Passed Test Cases
         run: |
-          if [ ! -f test_output.txt ]; then
-            echo "No output file found. Exiting..."
+          if [ ! -s results.log ]; then
+            echo "No output found. Exiting..."
             exit 1
           fi
           
-          TOTAL_TESTS=$(wc -l < test_output.txt)
-          PASSED_TESTS=$(grep -c "PASSED" test_output.txt || true)
+          TOTAL_TESTS=$(wc -l < results.log)
+          PASSED_TESTS=$(grep -c "PASSED" results.log || true)
           FAILED_TESTS=$((TOTAL_TESTS - PASSED_TESTS))
           
-          echo "Test Summary:"
-          echo "Total Test Cases: $TOTAL_TESTS"
-          echo "✅ Passed: $PASSED_TESTS"
-          echo "❌ Failed: $FAILED_TESTS"
-
-          echo "TOTAL_TESTS=$TOTAL_TESTS" >> $GITHUB_ENV
-          echo "PASSED_TESTS=$PASSED_TESTS" >> $GITHUB_ENV
-          echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_ENV
-
-      - name: Print Test Summary
-        run: |
           echo "### Test Summary Report ###"
           echo "Total: $TOTAL_TESTS"
           echo "✅ Passed: $PASSED_TESTS"
           echo "❌ Failed: $FAILED_TESTS"
-name: Run Code Tests
-
-on:
-  push:
-    paths:
-      - "solutions/**"
-  pull_request:
-    paths:
-      - "tests/**"
-
-jobs:
-  run-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Fetch full history for git diff
-
-      - name: Install Dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y gcc g++ openjdk-17-jdk python3
-
-      - name: Detect Changed Files
-        id: filter
-        uses: dorny/paths-filter@v2
-        with:
-          filters: |
-            c:
-              - 'solutions/**/*.c'
-            cpp:
-              - 'solutions/**/*.cpp'
-            python:
-              - 'solutions/**/*.py'
-            java:
-              - 'solutions/**/*.java'
-
-      - name: Compile and Run C Program
-        if: steps.filter.outputs.c == 'true'
-        run: |
-          gcc solutions/*.c -o solution_c
-          ./solution_c < tests/test.c > test_output.txt
-          echo "C program completed."
-
-      - name: Compile and Run C++ Program
-        if: steps.filter.outputs.cpp == 'true'
-        run: |
-          g++ solutions/*.cpp -o solution_cpp || { echo "C++ compilation failed"; exit 1; }
-          ./solution_cpp < tests/test.cpp > test_output.txt
-          echo "C++ program completed."
-
-      - name: Run Python Program
-        if: steps.filter.outputs.python == 'true'
-        run: |
-          python3 solutions/main.py < tests/test.py > test_output.txt
-          echo "Python program completed."
-
-      - name: Compile and Run Java Program
-        if: steps.filter.outputs.java == 'true'
-        run: |
-          javac solutions/*.java
-          java -cp solutions Main < tests/MainTest.java > test_output.txt
-          echo "Java program completed."
-
-      - name: Count Passed Test Cases
-        run: |
-          if [ ! -f test_output.txt ]; then
-            echo "No output file found. Exiting..."
-            exit 1
-          fi
           
-          TOTAL_TESTS=$(wc -l < test_output.txt)
-          PASSED_TESTS=$(grep -c "PASSED" test_output.txt || true)
-          FAILED_TESTS=$((TOTAL_TESTS - PASSED_TESTS))
-          
-          echo "Test Summary:"
-          echo "Total Test Cases: $TOTAL_TESTS"
-          echo "✅ Passed: $PASSED_TESTS"
-          echo "❌ Failed: $FAILED_TESTS"
-
           echo "TOTAL_TESTS=$TOTAL_TESTS" >> $GITHUB_ENV
           echo "PASSED_TESTS=$PASSED_TESTS" >> $GITHUB_ENV
           echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_ENV
-
-      - name: Print Test Summary
-        run: |
-          echo "### Test Summary Report ###"
-          echo "Total: $TOTAL_TESTS"
-          echo "✅ Passed: $PASSED_TESTS"
-          echo "❌ Failed: $FAILED_TESTS"
