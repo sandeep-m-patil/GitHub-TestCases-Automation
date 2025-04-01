@@ -6,7 +6,7 @@ on:
       - "solutions/**"
   pull_request:
     paths:
-      - "solutions/**"
+      - "tests/**"
 
 jobs:
   run-tests:
@@ -61,24 +61,19 @@ jobs:
             exit 1
           fi
 
-      - name: Ensure Test Case File Exists
-        run: |
-          if [ ! -f test_cases/input.txt ]; then
-            echo "Error: test_cases/input.txt not found! Please ensure it exists in the repository."
-            exit 1
-          fi
+     
 
       - name: Compile and Run C Program
         if: steps.determine-file.outputs.language == 'C'
         run: |
           gcc solutions/*.c -o solution_c
-          ./solution_c < test_cases/input.txt
+          ./solution_c < test_cases/test.c
 
       - name: Compile and Run C++ Program
         if: steps.determine-file.outputs.language == 'C++'
         run: |
           g++ solutions/*.cpp -o solution_cpp
-          ./solution_cpp < test_cases/input.txt
+          ./solution_cpp < test_cases/test.cpp
 
       - name: Run Python Program
         if: steps.determine-file.outputs.language == 'Python'
@@ -87,10 +82,10 @@ jobs:
             echo "Error: Python script not found!"
             exit 1
           fi
-          python3 solutions/*.py < test_cases/input.txt
+          python3 solutions/*.py < test_cases/test.py
 
       - name: Compile and Run Java Program
         if: steps.determine-file.outputs.language == 'Java'
         run: |
           javac solutions/*.java
-          java -cp solutions Solution < test_cases/input.txt
+          java -cp solutions Solution < test_cases/test.java
