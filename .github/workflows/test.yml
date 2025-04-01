@@ -25,60 +25,51 @@ jobs:
         run: |
           BEFORE_COMMIT="${{ github.event.before }}"
           if [ -z "$BEFORE_COMMIT" ] || ! git cat-file -e "$BEFORE_COMMIT"^{commit}; then
-            BEFORE_COMMIT=$(git rev-list --max-parents=0 HEAD)  # Fallback to first commit
+            BEFORE_COMMIT=$(git rev-list --max-parents=0 HEAD)
           fi
           CHANGED_FILES=$(git diff --name-only "$BEFORE_COMMIT" "${{ github.sha }}")
-          echo "Changed Files: $CHANGED_FILES"
           echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
           echo "::set-output name=changed_files::$CHANGED_FILES"
 
-      - name: Check for C Files
-        id: check-c
+      - name: Determine File Type
+        id: determine-file
         run: |
           if echo "$CHANGED_FILES" | grep -qE '\.c$'; then
-            echo "::set-output name=run_c::true"
-          fi
-
-      - name: Check for C++ Files
-        id: check-cpp
-        run: |
-          if echo "$CHANGED_FILES" | grep -qE '\.cpp$'; then
-            echo "::set-output name=run_cpp::true"
-          fi
-
-      - name: Check for Python Files
-        id: check-python
-        run: |
-          if echo "$CHANGED_FILES" | grep -qE '\.py$'; then
-            echo "::set-output name=run_python::true"
-          fi
-
-      - name: Check for Java Files
-        id: check-java
-        run: |
-          if echo "$CHANGED_FILES" | grep -qE '\.java$'; then
-            echo "::set-output name=run_java::true"
+            echo "language=C" >> $GITHUB_ENV
+            echo "::set-output name=language::C"
+          elif echo "$CHANGED_FILES" | grep -qE '\.cpp$'; then
+            echo "language=C++" >> $GITHUB_ENV
+            echo "::set-output name=language::C++"
+          elif echo "$CHANGED_FILES" | grep -qE '\.py$'; then
+            echo "language=Python" >> $GITHUB_ENV
+            echo "::set-output name=language::Python"
+          elif echo "$CHANGED_FILES" | grep -qE '\.java$'; then
+            echo "language=Java" >> $GITHUB_ENV
+            echo "::set-output name=language::Java"
+          else
+            echo "No relevant file changes detected."
+            exit 1
           fi
 
       - name: Compile and Run C Program
-        if: steps.check-c.outputs.run_c == 'true'
+        if: steps.determine-file.outputs.language == 'C'
         run: |
           gcc solutions/*.c -o solution_c
           ./solution_c < test_cases/input.txt
 
       - name: Compile and Run C++ Program
-        if: steps.check-cpp.outputs.run_cpp == 'true'
+        if: steps.determine-file.outputs.language == 'C++'
         run: |
           g++ solutions/*.cpp -o solution_cpp
           ./solution_cpp < test_cases/input.txt
 
       - name: Run Python Program
-        if: steps.check-python.outputs.run_python == 'true'
+        if: steps.determine-file.outputs.language == 'Python'
         run: |
           python3 solutions/*.py < test_cases/input.txt
 
       - name: Compile and Run Java Program
-        if: steps.check-java.outputs.run_java == 'true'
+        if: steps.determine-file.outputs.language == 'Java'
         run: |
           javac solutions/*.java
           java -cp solutions Solution < test_cases/input.txt
