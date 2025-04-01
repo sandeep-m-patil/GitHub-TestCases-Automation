@@ -15,7 +15,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  
+          fetch-depth: 2  # Ensure previous commit is available
 
       - name: Install Dependencies
         run: |
@@ -23,63 +23,69 @@ jobs:
           sudo apt install -y gcc g++ openjdk-17-jdk python3
 
       - name: Detect Changed Files
-        id: filter
-        uses: dorny/paths-filter@v2
-        with:
-          filters: |
-            c:
-              - 'solutions/**/*.c'
-            cpp:
-              - 'solutions/**/*.cpp'
-            python:
-              - 'solutions/**/*.py'
-            java:
-              - 'solutions/**/*.java'
-
-      - name: Compile and Run C Program
-        if: steps.filter.outputs.c == 'true'
+        id: changed-files
         run: |
-          gcc solutions/main.c -o solution_c
-          ./solution_c < tests/test.c | tee -a results.log || echo "Error running C program" >> results.log
-
-      - name: Compile and Run C++ Program
-        if: steps.filter.outputs.cpp == 'true'
-        run: |
-          g++ solutions/main.cpp -o solution_cpp
-          ./solution_cpp < tests/test.cpp | tee -a results.log || echo "Error running C++ program" >> results.log
-
-      - name: Run Python Program
-        if: steps.filter.outputs.python == 'true'
-        run: |
-          python3 solutions/main.py < tests/test.py | tee -a results.log || echo "Error running Python program" >> results.log
-
-      - name: Compile and Run Java Program
-        if: steps.filter.outputs.java == 'true'
-        run: |
-          javac solutions/Main.java
-          java -cp solutions Main < tests/MainTest.java | tee -a results.log || echo "Error running Java program" >> results.log
-
-      - name: Debug Test Output
-        run: |
-          echo "### Debugging results.log ###"
-          cat results.log || echo "results.log does not exist"
-
-      - name: Count Passed Test Cases
-        run: |
-          if [ ! -s results.log ]; then
-            echo "No test output found. Exiting..."
-            exit 1
+          BEFORE_COMMIT="${{ github.event.before }}"
+          if [ -z "$BEFORE_COMMIT" ] || ! git cat-file -e "$BEFORE_COMMIT"^{commit}; then
+            BEFORE_COMMIT=$(git rev-parse HEAD~1)  # Use last commit as fallback
           fi
           
-          TOTAL_TESTS=$(wc -l < results.log)
-          PASSED_TESTS=$(grep -c "PASSED" results.log || true)
-          FAILED_TESTS=$((TOTAL_TESTS - PASSED_TESTS))
+          CHANGED_FILES=$(git diff --name-only "$BEFORE_COMMIT" HEAD)
+          echo "Detected changed files: $CHANGED_FILES"
+          
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No file changes detected. Exiting..."
+            exit 1
+          fi
 
-          echo "### Test Summary Report ###"
-          echo "Total: $TOTAL_TESTS"
-          echo "✅ Passed: $PASSED_TESTS"
-          echo "❌ Failed: $FAILED_TESTS"
+          echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
+          echo "::set-output name=changed_files::$CHANGED_FILES"
 
-          echo "TOTAL_TESTS=$TOTAL_TESTS" >> $GITHUB_ENV
-          echo "PASSED_TESTS=$PASSED_TESTS" >> $GITHUB_ENV
-          echo "FAILED_TESTS=$FAILED_TESTS" >> $GITHUB_ENV
+      - name: Determine File Type
+        id: determine-file
+        run: |
+          if echo "$CHANGED_FILES" | grep -qE '\.c$'; then
+            echo "language=C" >> $GITHUB_ENV
+            echo "::set-output name=language::C"
+          elif echo "$CHANGED_FILES" | grep -qE '\.cpp$'; then
+            echo "language=C++" >> $GITHUB_ENV
+            echo "::set-output name=language::C++"
+          elif echo "$CHANGED_FILES" | grep -qE '\.py$'; then
+            echo "language=Python" >> $GITHUB_ENV
+            echo "::set-output name=language::Python"
+          elif echo "$CHANGED_FILES" | grep -qE '\.java$'; then
+            echo "language=Java" >> $GITHUB_ENV
+            echo "::set-output name=language::Java"
+          else
+            echo "No relevant file changes detected. Exiting..."
+            exit 1
+          fi
+
+     
+
+      - name: Compile and Run C Program
+        if: steps.determine-file.outputs.language == 'C'
+        run: |
+          gcc solutions/*.c -o solution_c
+          ./solution_c < tests/test.c
+
+      - name: Compile and Run C++ Program
+        if: steps.determine-file.outputs.language == 'C++'
+        run: |
+          g++ solutions/*.cpp -o solution_cpp
+          ./solution_cpp < tests/test.cpp
+
+      - name: Run Python Program
+        if: steps.determine-file.outputs.language == 'Python'
+        run: |
+          if [ ! -f solutions/*.py ]; then
+            echo "Error: Python script not found!"
+            exit 1
+          fi
+          python3 solutions/*.py < tests/test.py
+
+      - name: Compile and Run Java Program
+        if: steps.determine-file.outputs.language == 'Java'
+        run: |
+          javac solutions/*.java
+          java -cp solutions Solution < tests/Test.java
