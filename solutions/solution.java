@@ -29,7 +29,7 @@ class Solution {
         int[] nums = {-4, -1, 0, 3, 10};
         int[] result = solution.sortedSquares(nums);
 
-        System.out.println("Sorted Squares: " + Arrays.toString(result));
+        System.out.println("Sorted Squares: " + Arrays.toString(result));/*lets kep it like its happening now */
     }
 }
 /*vvnbv */
