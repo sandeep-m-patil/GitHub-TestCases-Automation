@@ -49,6 +49,7 @@ jobs:
             testcases/ctest.c)
               gcc $TEST_FILE -o ctest
               if [ $? -eq 0 ]; then
+                echo "running c test cases"
                 ./ctest
               else
                 echo "C test failed!"
@@ -58,12 +59,14 @@ jobs:
             testcases/cpptest.cpp)
               g++ $TEST_FILE -o cpptest
               if [ $? -eq 0 ]; then
+                echo "running cpp test cases"
                 ./cpptest
               else
                 echo "C++ test failed!"
                 exit 1
               fi
               ;;
+             echo "running python test cases"
             python -m testcases.pythontest)
               python3 $TEST_FILE
               if [ $? -ne 0 ]; then
