@@ -25,7 +25,7 @@ class Solution {
 
     // Testing the function
     public static void main(String[] args) {
-        Solution solution = new Solution();
+        Solution solution = new Solution();/*fsadfsdfsdag */
         int[] nums = {-4, -1, 0, 3, 10};
         int[] result = solution.sortedSquares(nums);
 
