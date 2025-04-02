@@ -15,7 +15,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # Ensure previous commit is available
+          fetch-depth: 2
 
       - name: Install Dependencies
         run: |
@@ -25,100 +25,55 @@ jobs:
       - name: Detect Changed Files
         id: changed-files
         run: |
-          BEFORE_COMMIT="${{ github.event.before }}"
-          if [ -z "$BEFORE_COMMIT" ] || ! git cat-file -e "$BEFORE_COMMIT"^{commit}; then
-            BEFORE_COMMIT=$(git rev-parse HEAD~1)  # Use last commit as fallback
-          fi
-          
-          CHANGED_FILES=$(git diff --name-only "$BEFORE_COMMIT" HEAD)
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep 'solutions/' || echo "")
           echo "Detected changed files: $CHANGED_FILES"
-          
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "No file changes detected. Exiting..."
-            exit 1
-          fi
-
           echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
 
       - name: Determine File Type
         id: determine-file
         run: |
-          if echo "$CHANGED_FILES" | grep -qE '\.c$'; then
-            echo "language=C" >> $GITHUB_ENV
-          elif echo "$CHANGED_FILES" | grep -qE '\.cpp$'; then
-            echo "language=C++" >> $GITHUB_ENV
-          elif echo "$CHANGED_FILES" | grep -qE '\.py$'; then
-            echo "language=Python" >> $GITHUB_ENV
-          elif echo "$CHANGED_FILES" | grep -qE '\.java$'; then
-            echo "language=Java" >> $GITHUB_ENV
-          else
-            echo "No relevant file changes detected. Exiting..."
-            exit 1
-          fi
+          MAIN_FILE=$(echo "$CHANGED_FILES" | grep -E '\.(c|cpp|py|java)$' | head -n 1 || echo "")
+          echo "Main file: $MAIN_FILE"
+          if [[ -z "$MAIN_FILE" ]]; then exit 1; fi
+          echo "MAIN_FILE=$MAIN_FILE" >> $GITHUB_ENV
+          case "$MAIN_FILE" in
+            *.c) echo "language=C" >> $GITHUB_ENV; echo "TEST_FILE=tests/test.c" >> $GITHUB_ENV;;
+            *.cpp) echo "language=C++" >> $GITHUB_ENV; echo "TEST_FILE=tests/test.cpp" >> $GITHUB_ENV;;
+            *.py) echo "language=Python" >> $GITHUB_ENV; echo "TEST_FILE=tests/test.py" >> $GITHUB_ENV;;
+            *.java) echo "language=Java" >> $GITHUB_ENV; echo "TEST_FILE=tests/Test.java" >> $GITHUB_ENV;;
+          esac
 
       - name: Compile and Run C++ Program
         if: env.language == 'C++'
         run: |
-          if [ -z "$(ls -A solutions/*.cpp 2>/dev/null)" ]; then
-            echo "No C++ files found. Exiting..."
-            exit 1
-          fi
-          g++ solutions/*.cpp -o solution_cpp
-          if [ $? -ne 0 ]; then
-            echo "Compilation failed. Check for errors."
-            exit 1
-          fi
-          
-          # Run the program and save output
-          ./solution_cpp < tests/test.cpp > test_output.log
-
-          # Count passed test cases (Assuming lines containing 'PASS' indicate success)
-          PASSED_TESTS=$(grep -c "PASS" test_output.log || echo 0)
-          TOTAL_TESTS=$(wc -l < tests/test.cpp || echo 0)
-          
-          echo "✅ $PASSED_TESTS out of $TOTAL_TESTS test cases passed." | tee -a $GITHUB_STEP_SUMMARY
+          g++ $MAIN_FILE -o solution_cpp
+          ./solution_cpp < $TEST_FILE > test_output.log
+          PASSED=$(grep -c "PASS" test_output.log || echo 0)
+          TOTAL=$(wc -l < $TEST_FILE || echo 0)
+          echo "✅ $PASSED out of $TOTAL test cases passed." | tee -a $GITHUB_STEP_SUMMARY
 
       - name: Compile and Run C Program
         if: env.language == 'C'
         run: |
-          if [ -z "$(ls -A solutions/*.c 2>/dev/null)" ]; then
-            echo "No C files found. Exiting..."
-            exit 1
-          fi
-          gcc solutions/*.c -o solution_c
-          ./solution_c < tests/test.c > test_output.log
-
-          PASSED_TESTS=$(grep -c "PASS" test_output.log || echo 0)
-          TOTAL_TESTS=$(wc -l < tests/test.c || echo 0)
-          echo "✅ $PASSED_TESTS out of $TOTAL_TESTS test cases passed." | tee -a $GITHUB_STEP_SUMMARY
+          gcc $MAIN_FILE -o solution_c
+          ./solution_c < $TEST_FILE > test_output.log
+          PASSED=$(grep -c "PASS" test_output.log || echo 0)
+          TOTAL=$(wc -l < $TEST_FILE || echo 0)
+          echo "✅ $PASSED out of $TOTAL test cases passed." | tee -a $GITHUB_STEP_SUMMARY
 
       - name: Run Python Program
         if: env.language == 'Python'
         run: |
-          if [ -z "$(ls -A solutions/*.py 2>/dev/null)" ]; then
-            echo "No Python files found. Exiting..."
-            exit 1
-          fi
-          python3 solutions/*.py < tests/test.py > test_output.log
-
-          PASSED_TESTS=$(grep -c "PASS" test_output.log || echo 0)
-          TOTAL_TESTS=$(wc -l < tests/test.py || echo 0)
-          echo "✅ $PASSED_TESTS out of $TOTAL_TESTS test cases passed." | tee -a $GITHUB_STEP_SUMMARY
+          python3 $MAIN_FILE < $TEST_FILE > test_output.log
+          PASSED=$(grep -c "PASS" test_output.log || echo 0)
+          TOTAL=$(wc -l < $TEST_FILE || echo 0)
+          echo "✅ $PASSED out of $TOTAL test cases passed." | tee -a $GITHUB_STEP_SUMMARY
 
       - name: Compile and Run Java Program
         if: env.language == 'Java'
         run: |
-          if [ -z "$(ls -A solutions/*.java 2>/dev/null)" ]; then
-            echo "No Java files found. Exiting..."
-            exit 1
-          fi
-          javac solutions/*.java
-          if [ $? -ne 0 ]; then
-            echo "Java compilation failed. Check for errors."
-            exit 1
-          fi
-          java -cp solutions Solution < tests/Test.java > test_output.log
-
-          PASSED_TESTS=$(grep -c "PASS" test_output.log || echo 0)
-          TOTAL_TESTS=$(wc -l < tests/Test.java || echo 0)
-          echo "✅ $PASSED_TESTS out of $TOTAL_TESTS test cases passed." | tee -a $GITHUB_STEP_SUMMARY
+          javac $MAIN_FILE
+          java -cp solutions Solution < $TEST_FILE > test_output.log
+          PASSED=$(grep -c "PASS" test_output.log || echo 0)
+          TOTAL=$(wc -l < $TEST_FILE || echo 0)
+          echo "✅ $PASSED out of $TOTAL test cases passed." | tee -a $GITHUB_STEP_SUMMARY
