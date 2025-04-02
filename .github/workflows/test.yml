@@ -87,7 +87,7 @@ jobs:
       - name: Run Python Tests
         if: env.language == 'Python'
         run: |
-          python3 testcases/pythontest.py | tee test_results.log
+          python -m testcases.pythontest  | tee test_results.log
 
       - name: Compile and Run Java Tests
         if: env.language == 'Java'
