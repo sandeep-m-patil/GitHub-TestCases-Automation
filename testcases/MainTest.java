@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+// Source code is decompiled from a .class file using FernFlower decompiler.
+package testcases;
+
+=======
+>>>>>>> 5e04b86958496491cd0de0813fa6ea8391d2cff2
 import java.util.Arrays;
 import main.Main;
 
