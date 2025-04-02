@@ -1,5 +1,9 @@
 #include <stdio.h>
+<<<<<<< HEAD
 // c 
+=======
+
+>>>>>>> 5e04b86958496491cd0de0813fa6ea8391d2cff2
 // Function to find the longest mountain in an array
 int longestMountain(int arr[], int n) {
     if (n < 3) return 0;
@@ -31,4 +35,8 @@ int longestMountain(int arr[], int n) {
     }
 
     return longest;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 5e04b86958496491cd0de0813fa6ea8391d2cff2

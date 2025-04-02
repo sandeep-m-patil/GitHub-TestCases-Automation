@@ -3,10 +3,17 @@ name: Run Code Tests
 on:
   push:
     paths:
+<<<<<<< HEAD
       - "main/**"
   pull_request:
     paths:
       - "testcases/**"
+=======
+      - "main/"
+  pull_request:
+    paths:
+      - "testcases/"
+>>>>>>> 5e04b86958496491cd0de0813fa6ea8391d2cff2
 
 jobs:
   run-tests:

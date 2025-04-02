@@ -2,7 +2,10 @@
 
 using namespace std;
 
+<<<<<<< HEAD
 // solution class 
+=======
+>>>>>>> 5e04b86958496491cd0de0813fa6ea8391d2cff2
 class Solution
 {
 public:
@@ -35,9 +38,15 @@ public:
                 }
             }
         }
+<<<<<<< HEAD
 
         return longest;
 
 
     }
 };
+=======
+        return longest;
+    }
+};
+>>>>>>> 5e04b86958496491cd0de0813fa6ea8391d2cff2
