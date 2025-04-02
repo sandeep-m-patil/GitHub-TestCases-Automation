@@ -21,6 +21,9 @@ jobs:
           sudo apt update
           sudo apt install -y gcc g++ openjdk-17-jdk python3 python3-pip
 
+      - name: Cleanup Previous Runs
+        run: rm -rf main/* || true
+
       - name: List directory contents for debugging
         run: |
           echo "Listing contents of 'main' directory for debugging:"
@@ -29,7 +32,14 @@ jobs:
       - name: Detect submitted file and set test file
         id: detect-language
         run: |
-          FILE=$(find main -type f \( -name "*.java" -o -name "*.c" -o -name "*.cpp" -o -name "*.py" \) | head -n 1)
+          echo "Detecting submitted file..."
+          
+          # Prioritize Java files if they exist
+          FILE=$(find main -type f -name "*.java" | head -n 1)
+          if [[ -z "$FILE" ]]; then
+            FILE=$(find main -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.py" \) | head -n 1)
+          fi
+
           echo "Detected file: $FILE"
 
           if [[ -z "$FILE" ]]; then
@@ -37,6 +47,7 @@ jobs:
             exit 1
           fi
 
+          # Set environment variables based on file type
           if [[ $FILE == *.java ]]; then
             echo "SUBMITTED_FILE=$FILE" >> $GITHUB_ENV
             echo "TEST_FILE=testcases/MainTest.java" >> $GITHUB_ENV
