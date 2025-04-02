@@ -1,5 +1,5 @@
 #include <stdio.h>
-// Function to find the longest mountain in an array
+// Function to find the longest mountain in an array..
 int longestMountain(int arr[], int n) {
     if (n < 3) return 0;
 
