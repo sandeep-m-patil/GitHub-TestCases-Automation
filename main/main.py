@@ -3,7 +3,7 @@ class Solution:
         n = len(arr)
         if n < 3:
             return 0
-        
+        #..
         longest = 0
         
         for i in range(1, n - 1):
