@@ -4,7 +4,7 @@ public class Main {
         if (arr.length < 3) return 0;
 
         int longest = 0;
-
+//modified
         for (int i = 1; i < arr.length - 1; i++) {
             if (arr[i - 1] < arr[i] && arr[i] > arr[i + 1]) {
                 int left = i - 1;
