@@ -5,7 +5,7 @@ class Solution:
             return 0
 
         longest = 0
-
+#modified py
         for i in range(1, n - 1):
             # Check if arr[i] is a peak
             if arr[i - 1] < arr[i] > arr[i + 1]:
