@@ -3,10 +3,10 @@ name: Run Code Tests
 on:
   push:
     paths:
-      - "solutions/**"
+      - "main/"
   pull_request:
     paths:
-      - "tests/**"
+      - "testcases/"
 
 jobs:
   run-tests:
@@ -15,65 +15,89 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
-
-      - name: Install Dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y gcc g++ openjdk-17-jdk python3
-
+          fetch-depth: 2  # Ensure previous commit is available
       - name: Detect Changed Files
         id: changed-files
         run: |
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD | grep 'solutions/' || echo "")
-          echo "Detected changed files: $CHANGED_FILES"
-          echo "CHANGED_FILES=$CHANGED_FILES" >> $GITHUB_ENV
+          BEFORE_COMMIT="${{ github.event.before }}"
+          if [ -z "$BEFORE_COMMIT" ] || ! git cat-file -e "$BEFORE_COMMIT"^{commit}; then
+            BEFORE_COMMIT=$(git rev-parse HEAD~1)  # Use last commit as fallback
+          fi
+            
+            # Get changed files in solutions/ directory
+            CHANGED_FILES=$(git diff --name-only "$BEFORE_COMMIT" HEAD | grep '^main/' || true)
+            
+            echo "Detected changed files: $CHANGED_FILES"
+            
+            if [ -z "$CHANGED_FILES" ]; then
+              echo "No file changes detected. Exiting..."
+              exit 1
+            fi
+        
+            # Store changed files in a newline-separated format
+            echo "$CHANGED_FILES" > changed_files_list.txt
+            echo "CHANGED_FILES=$(cat changed_files_list.txt)" >> $GITHUB_ENV
+            echo "changed_files=$(cat changed_files_list.txt)" >> $GITHUB_OUTPUT
+        
 
       - name: Determine File Type
         id: determine-file
         run: |
-          MAIN_FILE=$(echo "$CHANGED_FILES" | grep -E '\.(c|cpp|py|java)$' | head -n 1 || echo "")
-          echo "Main file: $MAIN_FILE"
-          if [[ -z "$MAIN_FILE" ]]; then exit 1; fi
-          echo "MAIN_FILE=$MAIN_FILE" >> $GITHUB_ENV
-          case "$MAIN_FILE" in
-            *.c) echo "language=C" >> $GITHUB_ENV; echo "TEST_FILE=tests/test.c" >> $GITHUB_ENV;;
-            *.cpp) echo "language=C++" >> $GITHUB_ENV; echo "TEST_FILE=tests/test.cpp" >> $GITHUB_ENV;;
-            *.py) echo "language=Python" >> $GITHUB_ENV; echo "TEST_FILE=tests/test.py" >> $GITHUB_ENV;;
-            *.java) echo "language=Java" >> $GITHUB_ENV; echo "TEST_FILE=tests/Test.java" >> $GITHUB_ENV;;
-          esac
+          for file in $CHANGED_FILES; do
+            case "$file" in
+              *.c) echo "language=C" >> $GITHUB_ENV ;;
+              *.cpp) echo "language=C++" >> $GITHUB_ENV ;;
+              *.py) echo "language=Python" >> $GITHUB_ENV ;;
+              *.java) echo "language=Java" >> $GITHUB_ENV ;;
+            esac
+          done
 
-      - name: Compile and Run C++ Program
+      - name: Install C Dependencies
+        if: env.language == 'C'
+        run: sudo apt update && sudo apt install -y gcc
+
+      - name: Install C++ Dependencies
         if: env.language == 'C++'
-        run: |
-          g++ $MAIN_FILE -o solution_cpp
-          ./solution_cpp < $TEST_FILE > test_output.log
-          PASSED=$(grep -c "PASS" test_output.log || echo 0)
-          TOTAL=$(wc -l < $TEST_FILE || echo 0)
-          echo "✅ $PASSED out of $TOTAL test cases passed." | tee -a $GITHUB_STEP_SUMMARY
+        run: sudo apt update && sudo apt install -y g++
 
-      - name: Compile and Run C Program
+      - name: Install Python Dependencies
+        if: env.language == 'Python'
+        run: sudo apt update && sudo apt install -y python3
+
+      - name: Install Java Dependencies
+        if: env.language == 'Java'
+        run: sudo apt update && sudo apt install -y openjdk-17-jdk
+
+      - name: Compile and Run C Tests
         if: env.language == 'C'
         run: |
-          gcc $MAIN_FILE -o solution_c
-          ./solution_c < $TEST_FILE > test_output.log
-          PASSED=$(grep -c "PASS" test_output.log || echo 0)
-          TOTAL=$(wc -l < $TEST_FILE || echo 0)
-          echo "✅ $PASSED out of $TOTAL test cases passed." | tee -a $GITHUB_STEP_SUMMARY
+          gcc testcases/ctest.c -o test_runner
+          echo "Running C Test Cases..."
+          ./test_runner | tee test_results.log  # Capture output in logs
 
-      - name: Run Python Program
+      - name: Compile and Run C++ Tests
+        if: env.language == 'C++'
+        run: |
+          g++ testcases/cpptest.cpp -o test_runner_cpp
+          echo "Running C++ Test Cases..."
+          ./test_runner_cpp | tee test_results.log
+
+      - name: Run Python Tests
         if: env.language == 'Python'
         run: |
-          python3 $MAIN_FILE < $TEST_FILE > test_output.log
-          PASSED=$(grep -c "PASS" test_output.log || echo 0)
-          TOTAL=$(wc -l < $TEST_FILE || echo 0)
-          echo "✅ $PASSED out of $TOTAL test cases passed." | tee -a $GITHUB_STEP_SUMMARY
+          echo "Running Python Test Cases..."
+          python3 testcases/pythontest.py | tee test_results.log
 
-      - name: Compile and Run Java Program
+      - name: Compile and Run Java Tests
         if: env.language == 'Java'
         run: |
-          javac $MAIN_FILE
-          java -cp solutions Solution < $TEST_FILE > test_output.log
-          PASSED=$(grep -c "PASS" test_output.log || echo 0)
-          TOTAL=$(wc -l < $TEST_FILE || echo 0)
-          echo "✅ $PASSED out of $TOTAL test cases passed." | tee -a $GITHUB_STEP_SUMMARY
+          javac testcases/MainTest.java
+          echo "Running Java Test Cases..."
+          java -cp testcases Test | tee test_results.log
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test_results.log
