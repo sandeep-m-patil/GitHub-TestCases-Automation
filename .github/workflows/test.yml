@@ -21,24 +21,24 @@ jobs:
           sudo apt update
           sudo apt install -y gcc g++ openjdk-17-jdk python3 python3-pip
 
-      - name: Cleanup Previous Runs
-        run: rm -rf main/* || true
-
-      - name: List directory contents for debugging
+      - name: Debug - List all files in repo
         run: |
-          echo "Listing contents of 'main' directory for debugging:"
-          ls -R main
+          echo "Listing ALL files in repo (before file detection):"
+          find . -type f
 
       - name: Detect submitted file and set test file
         id: detect-language
         run: |
           echo "Detecting submitted file..."
           
-          # Prioritize Java files if they exist
-          FILE=$(find main -type f -name "*.java" | head -n 1)
-          if [[ -z "$FILE" ]]; then
-            FILE=$(find main -type f \( -name "*.c" -o -name "*.cpp" -o -name "*.py" \) | head -n 1)
-          fi
+          # Prioritize Java, then check other languages
+          FILE=""
+          for lang in java c cpp py; do
+            FILE=$(find main -type f -name "*.${lang}" | head -n 1)
+            if [[ ! -z "$FILE" ]]; then
+              break
+            fi
+          done
 
           echo "Detected file: $FILE"
 
