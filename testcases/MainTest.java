@@ -1,3 +1,4 @@
+package testcases;
 import java.util.Arrays;
 import main.Main;
 
