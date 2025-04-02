@@ -2,7 +2,7 @@
 
 using namespace std;
 
-
+// solution class 
 class Solution
 {
 public:
