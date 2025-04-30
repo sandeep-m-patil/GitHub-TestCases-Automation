@@ -125,7 +125,7 @@ int main()
     printf("\n\n✅ Passed %d / %d test cases!\n", passedCount, total);
     if (passedCount != total)
     {
-        assert(0);
+       exit(1);
     }
 
     return 0;
