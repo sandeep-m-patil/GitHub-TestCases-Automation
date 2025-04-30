@@ -71,7 +71,7 @@ public class MainTest {
       runTestCase(var4, 999, var1, var2);
       System.out.printf("\n\n✅ Passed %d / %d test cases!\n", var1[0], var2[0]);
       if (var1[0] != var2[0]) {
-         throw new AssertionError("Some test cases failed.");
+         System.exit(1);
       }
    }
 }
